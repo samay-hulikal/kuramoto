@@ -42,7 +42,7 @@ class Kuramoto:
         self.time = 0
 
         self.theta = np.random.uniform(0, 2 * np.pi, N)
-        self.omega = np.random.normal(1, stdomega, N) # Negative frequencies are okay; moving frames
+        self.omega = np.random.normal(1, stdomega, N) 
 
     # def coupling(self, oscillatori):
     #     """
