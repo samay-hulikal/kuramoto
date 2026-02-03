@@ -9,22 +9,22 @@ class Kuramoto:
     Kuramoto model of N coupled oscillators with environmental forcing.
 
     Equation:
-        d theta_i/dt = omega_i + K/N sum_{j = 1}^N sin(theta_i - theta_j) + Kenv/N sin(omega_text{env} t - theta_i)
+        d theta_i/dt = omega_i + K/N sum_{j = 1}^N sin(theta_j - theta_i) + Kenv sin(omega_text{env} t - theta_i)
 
     Attributes:
         N: Number of oscillators
         K: Coupling constant
-        Kenv: Environmental coupling
+        Kenv: Environmental coupling constant
         theta: Array of phases at given step
-        omega: Array of oscillator frequencies
-        stdomega: Standard deviation for the oscillator frequency
-        envomega: Forcing from the environment
+        omega: Array of oscillator frequencies chosen from a normal distribution
+        stdomega: Standard deviation for the oscillator frequency distribution
+        envomega: Forcing frequency from the environment
         time: Simultaion time
 
-    The mean frequency of the oscillators is set to 1. 
+    The mean frequency of the oscillators is set to 1 (arbitrary and allows "negative" frequencies; moving frame).
     """
 
-    def __init__(self, N, K, stdomega, envomega = 0):
+    def __init__(self, N, K, stdomega, Kenv = 0, envomega = 0):
         """
         Initialize Kuramoto model.
 
@@ -37,6 +37,7 @@ class Kuramoto:
         self.N = N
         self.K = K
         self.stdomega = stdomega
+        self.Kenv = Kenv
         self.envomega = envomega
         self.time = 0
 
@@ -61,14 +62,14 @@ class Kuramoto:
     
     def step(self, dt):
         """
-        Taking a step in the integration- theta_i(t + dt) = theta_i(t) + dt * (omega_i + coupling_i(t)).
+        Taking a step in the integration- theta_i(t + dt) = theta_i(t) + dt * (omega_i + coupling_i(t) + K_text{env} sin(psi t - theta_i)).
 
         Args:
             dt: Step size
         """
         theta_diff = self.theta[:, np.newaxis] - self.theta[np.newaxis, :]
-        coupling_array = (self.K/self.N) * np.sum(np.sin(theta_diff), axis = 1)
-        self.theta += dt * (self.omega + coupling_array)
+        coupling_array = (self.K/self.N) * np.sum(np.sin(theta_diff), axis = 0)
+        self.theta += dt * (self.omega + coupling_array + self.Kenv * np.sin(self.envomega * self.time - self.theta))
         self.time += dt
         # for i in range(self.N):
         #     self.theta[i] += dt * (self.omega[i] + self.coupling(i))
@@ -84,10 +85,19 @@ class Kuramoto:
         """
         return np.abs(np.mean(np.exp(1j * self.theta)))
 
+    def position(self):
+        """
+        Position on a unit circle.
+
+        Returns:
+            (cos(theta), sin(theta))
+        """
+        return np.stack([np.cos(self.theta), np.sin(self.theta)], axis = 1)
+
     def __repr__(self):
         """
         Representing the class as a string.
         """
         r = self.orderparameter()
-        return f"Kuramoto model: N = {self.N:d}, K = {self.K:.3f}, r = {r:.3f}, time = {self.time:.3f}"
+        return f"Kuramoto model: N = {self.N:d}, K = {self.K:.3f}, Kenv = {self.Kenv:.3f}, stdomega = {self.stdomega}, r = {r:.3f}, time = {self.time:.3f}"
 
