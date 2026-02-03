@@ -25,8 +25,8 @@ order = np.array(order)
 theta = np.array(theta)
 position = np.array(position)
 
-print(theta.shape)
-print(position.shape)
+# print(theta.shape)
+# print(position.shape)
 
 # Plotting the data
 fig, ax = plt.subplots(figsize = (10, 6))
